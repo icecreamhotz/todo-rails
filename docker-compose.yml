@@ -1,0 +1,40 @@
+version: '3'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes: 
+      - ".:/app"
+    ports: 
+      - "3000:3000"
+    links: 
+      - db
+    environment: 
+      - DATABASE_USERNAME=root
+      - DATABASE_PASSWORD=root
+      - DATABASE_HOST=db
+      - DATABASE_NAME=app
+  
+  db:
+    image: mariadb
+    volumes:
+      - ./data/db:/var/lib/mysql
+    environment :
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_ROOT_HOST=%
+    entrypoint: 
+      sh -c "
+      echo 'CREATE DATABASE IF NOT EXISTS app;' > /docker-entrypoint-initdb.d/init.sql;
+      /usr/local/bin/docker-entrypoint.sh --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci"
+    healthcheck:
+      test: mysql --user=root --password=root
+
+  pma:
+    image: phpmyadmin/phpmyadmin
+    ports: 
+      - "8082:80"
+    links:
+      - "db"
+    
